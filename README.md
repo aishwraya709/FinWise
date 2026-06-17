@@ -2,7 +2,7 @@
 
 **FinWise** is a novel, gamified banking management system that doesn't just *track* money—it *coaches* you. Built entirely in a single HTML file with pure JavaScript and LocalStorage, it actively fights impulsive spending, automates micro-savings, and visualizes your future wealth.
 
-🚀 **[Live Demo]((https://aishwraya709.github.io/FinWise/))** (Replace with your hosted link)
+🚀 **[Live Demo](https://aishwraya709.github.io/FinWise/)** (Replace with your hosted link)
 
 ---
 
