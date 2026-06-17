@@ -41,5 +41,5 @@
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/finwise.git
+   git clone https://github.com/aishwraya709/finwise.git
    cd finwise
