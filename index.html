@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinWise — Behavioral Banking</title>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: #f4f6fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .app-container {
+      max-width: 420px;
+      width: 100%;
+      background: white;
+      border-radius: 40px 40px 30px 30px;
+      box-shadow: 0 20px 60px rgba(0, 20, 30, 0.12);
+      overflow: hidden;
+      position: relative;
+      min-height: 750px;
+    }
+
+    /* ===== LOGIN / REGISTER OVERLAY ===== */
+    .auth-overlay {
+      background: white;
+      padding: 40px 25px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 750px;
+      justify-content: center;
+    }
+    .auth-overlay.hidden {
+      display: none;
+    }
+    .auth-overlay h1 {
+      font-size: 2.4rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .auth-overlay p.sub {
+      color: #64748b;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+    .auth-overlay input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      margin-bottom: 14px;
+      font-size: 1rem;
+      transition: 0.2s;
+      background: #f8fafc;
+    }
+    .auth-overlay input:focus {
+      border-color: #6366f1;
+      outline: none;
+      background: white;
+    }
+    .auth-overlay button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 16px;
+      background: #6366f1;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 6px;
+    }
+    .auth-overlay button:hover {
+      background: #4f46e5;
+      transform: scale(1.01);
+    }
+    .auth-toggle {
+      margin-top: 18px;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+    .auth-toggle span {
+      color: #6366f1;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* ===== MAIN APP (Hidden until logged in) ===== */
+    .main-app {
+      display: none;
+      flex-direction: column;
+      min-height: 750px;
+      background: #ffffff;
+    }
+    .main-app.active {
+      display: flex;
+    }
+
+    /* Header */
+    .app-header {
+      padding: 24px 22px 10px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+    }
+    .app-header h2 {
+      font-weight: 800;
+      font-size: 1.7rem;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .app-header .user-badge {
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .app-header .user-badge i {
+      color: #6366f1;
+    }
+
+    /* Content Panels */
+    .panel {
+      display: none;
+      padding: 10px 20px 20px 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .panel.active {
+      display: block;
+    }
+
+    /* ===== DASHBOARD ===== */
+    .balance-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: white;
+      border-radius: 28px;
+      padding: 24px 22px;
+      margin-bottom: 20px;
+    }
+    .balance-card .label {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      letter-spacing: 1px;
+    }
+    .balance-card .amount {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin: 4px 0 6px;
+    }
+    .balance-card .sub-info {
+      display: flex;
+      gap: 20px;
+      font-size: 0.85rem;
+    }
+    .balance-card .sub-info span i {
+      margin-right: 4px;
+      opacity: 0.7;
+    }
+
+    /* Buckets */
+    .buckets-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .bucket-item {
+      flex: 1;
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 16px 8px;
+      text-align: center;
+      border: 1px solid #eef2f6;
+    }
+    .bucket-item .ring {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: white;
+      position: relative;
+      background: conic-gradient(#94a3b8 0deg, #e2e8f0 0deg);
+    }
+    .bucket-item .ring.need { background: conic-gradient(#3b82f6 var(--pct), #e2e8f0 var(--pct)); }
+    .bucket-item .ring.want { background: conic-gradient(#f59e0b var(--pct), #e2e8f0 var(--pct)); }
+    .bucket-item .ring.save { background: conic-gradient(#10b981 var(--pct), #e2e8f0 var(--pct)); }
+    .bucket-item .ring span { z-index: 2; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 20px; font-size: 0.7rem; }
+    .bucket-item .b-label { font-weight: 600; font-size: 0.7rem; color: #475569; }
+    .bucket-item .b-value { font-weight: 700; font-size: 0.95rem; color: #0f172a; }
+
+    /* Vault & XP */
+    .vault-xp-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .vault-card, .xp-card {
+      flex: 1;
+      background: #f8fafc;
+      border-radius: 20px;
+      padding: 14px 16px;
+      border: 1px solid #eef2f6;
+    }
+    .vault-card .v-title, .xp-card .xp-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+    }
+    .vault-card .v-amount {
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: #0f172a;
+    }
+    .vault-card .v-progress {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      margin: 6px 0;
+    }
+    .vault-card .v-progress div {
+      height: 6px;
+      background: #f59e0b;
+      border-radius: 10px;
+      width: 0%;
+    }
+    .vault-card button {
+      background: #0f172a;
+      color: white;
+      border: none;
+      padding: 4px 14px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .xp-card .xp-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      margin: 6px 0;
+    }
+    .xp-card .xp-bar-bg div {
+      height: 6px;
+      background: #8b5cf6;
+      border-radius: 10px;
+      width: 0%;
+    }
+    .xp-card .xp-level {
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+    .badge-mini {
+      background: #fef3c7;
+      color: #b45309;
+      padding: 2px 8px;
+      border-radius: 30px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    /* ===== TRANSACTIONS PANEL ===== */
+    .tx-form {
+      background: #f8fafc;
+      border-radius: 24px;
+      padding: 18px;
+      margin-bottom: 20px;
+      border: 1px solid #eef2f6;
+    }
+    .tx-form .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .tx-form input, .tx-form select {
+      flex: 1;
+      padding: 12px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      background: white;
+      font-size: 0.9rem;
+    }
+    .tx-form input:focus, .tx-form select:focus {
+      border-color: #6366f1;
+      outline: none;
+    }
+    .tx-form .tx-btn {
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 20px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+    }
+    .tx-list .tx-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .tx-item .tx-desc { font-weight: 600; font-size: 0.95rem; }
+    .tx-item .tx-desc small { font-weight: 400; color: #94a3b8; font-size: 0.7rem; display: block; }
+    .tx-item .tx-amount { font-weight: 700; }
+    .tx-item .tx-amount.income { color: #10b981; }
+    .tx-item .tx-amount.expense { color: #ef4444; }
+
+    /* ===== INSIGHTS PANEL ===== */
+    .insight-card {
+      background: #f8fafc;
+      border-radius: 24px;
+      padding: 20px;
+      margin-bottom: 18px;
+      border: 1px solid #eef2f6;
+    }
+    .insight-card h4 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    .insight-card .big-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #ef4444;
+    }
+    .insight-card .big-number.green { color: #10b981; }
+    .sub-tag {
+      background: #fee2e2;
+      color: #b91c1c;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: inline-block;
+      margin: 3px 4px 3px 0;
+    }
+    .compound-slider {
+      width: 100%;
+      accent-color: #6366f1;
+      margin: 12px 0;
+    }
+    .compound-result {
+      font-weight: 800;
+      font-size: 1.6rem;
+      color: #0f172a;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      display: flex;
+      background: white;
+      border-top: 1px solid #eef2f6;
+      padding: 10px 12px 14px;
+      justify-content: space-around;
+      margin-top: auto;
+    }
+    .bottom-nav .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #94a3b8;
+      font-size: 0.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      border: none;
+      background: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .bottom-nav .nav-item i {
+      font-size: 1.5rem;
+      margin-bottom: 2px;
+    }
+    .bottom-nav .nav-item.active {
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 4px 16px;
+    }
+
+    /* Confetti */
+    .confetti-msg {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #0f172a;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 30px;
+      font-weight: 700;
+      z-index: 999;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      display: none;
+      text-align: center;
+      animation: pop 0.4s ease;
+    }
+    @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+    /* Scroll */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    /* Responsive */
+    @media (max-width: 450px) {
+      .buckets-row { flex-direction: row; gap: 6px; }
+      .bucket-item .ring { width: 50px; height: 50px; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== CONFETTI OVERLAY ===== -->
+<div id="confettiBox" class="confetti-msg">🎉 Vault Locked! +$<span id="confettiAmount">0</span> to Savings</div>
+
+<div class="app-container" id="app">
+
+  <!-- ===== AUTH SECTION ===== -->
+  <div id="authSection" class="auth-overlay">
+    <h1>FinWise</h1>
+    <p class="sub">💰 Save money. Level up.</p>
+    <div style="width:100%;">
+      <input type="text" id="authUsername" placeholder="Username" value="demo">
+      <input type="password" id="authPassword" placeholder="Password" value="demo123">
+      <button id="authMainBtn">Login</button>
+      <div class="auth-toggle" id="authToggle">Don't have an account? <span>Register</span></div>
+      <div id="authError" style="color:#ef4444; font-size:0.8rem; margin-top:10px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="mainApp" class="main-app">
+
+    <!-- Header -->
+    <div class="app-header">
+      <h2>FinWise</h2>
+      <div class="user-badge"><i class="fas fa-user"></i> <span id="headerUsername">User</span></div>
+    </div>
+
+    <!-- Panels -->
+    <div id="panelDashboard" class="panel active">
+      <!-- Balance -->
+      <div class="balance-card">
+        <div class="label">TOTAL BALANCE</div>
+        <div class="amount" id="dashBalance">$0.00</div>
+        <div class="sub-info">
+          <span><i class="fas fa-arrow-up"></i> Needs: <strong id="dashNeeds">$0</strong></span>
+          <span><i class="fas fa-arrow-right"></i> Wants: <strong id="dashWants">$0</strong></span>
+          <span><i class="fas fa-arrow-down"></i> Savings: <strong id="dashSavings">$0</strong></span>
+        </div>
+      </div>
+
+      <!-- Buckets -->
+      <div class="buckets-row">
+        <div class="bucket-item"><div class="ring need" id="ringNeed" style="--pct:0%"><span>0%</span></div><div class="b-label">Needs</div><div class="b-value" id="bNeedVal">$0</div></div>
+        <div class="bucket-item"><div class="ring want" id="ringWant" style="--pct:0%"><span>0%</span></div><div class="b-label">Wants</div><div class="b-value" id="bWantVal">$0</div></div>
+        <div class="bucket-item"><div class="ring save" id="ringSave" style="--pct:0%"><span>0%</span></div><div class="b-label">Savings</div><div class="b-value" id="bSaveVal">$0</div></div>
+      </div>
+
+      <!-- Vault + XP -->
+      <div class="vault-xp-row">
+        <div class="vault-card">
+          <div class="v-title"><i class="fas fa-piggy-bank"></i> SPARE VAULT</div>
+          <div class="v-amount" id="dashVault">$0.00</div>
+          <div class="v-progress"><div id="vaultProgressBar" style="width:0%"></div></div>
+          <button id="lockVaultBtn"><i class="fas fa-lock"></i> Lock Vault ($10 goal)</button>
+        </div>
+        <div class="xp-card">
+          <div class="xp-title"><i class="fas fa-star"></i> XP / LEVEL</div>
+          <div class="xp-level" id="dashLevel">Level 1</div>
+          <div class="xp-bar-bg"><div id="xpProgressBar" style="width:0%"></div></div>
+          <div style="font-size:0.7rem; color:#475569;"><span id="dashXP">0</span> XP</div>
+          <div id="badgeContainer" style="margin-top:6px;"></div>
+        </div>
+      </div>
+      <div style="font-size:0.7rem; color:#94a3b8; text-align:center; margin-top:10px;">🔥 Streak: <span id="dashStreak">0</span> days</div>
+    </div>
+
+    <div id="panelTransactions" class="panel">
+      <div class="tx-form">
+        <div class="row">
+          <input type="number" id="txAmount" placeholder="Amount" step="0.01">
+          <select id="txType"><option value="expense">Expense</option><option value="income">Income</option></select>
+        </div>
+        <input type="text" id="txDesc" placeholder="Description (e.g. Starbucks, Netflix)" style="width:100%; margin-bottom:10px; padding:12px; border:2px solid #e2e8f0; border-radius:14px;">
+        <button class="tx-btn" id="addTxBtn"><i class="fas fa-plus"></i> Add Transaction</button>
+      </div>
+      <div id="txList" class="tx-list"></div>
+    </div>
+
+    <div id="panelInsights" class="panel">
+      <div class="insight-card">
+        <h4>📡 Subscription Leech Detector</h4>
+        <div id="subList"></div>
+        <div style="margin-top:10px;">Annual Leakage: <span class="big-number" id="annualLeak">$0</span></div>
+      </div>
+      <div class="insight-card">
+        <h4>📈 Compound Interest Visualizer</h4>
+        <p style="font-size:0.8rem; color:#475569;">Your current savings: <strong id="compoundBase">$0</strong></p>
+        <input type="range" class="compound-slider" id="yearSlider" min="1" max="30" value="10">
+        <div style="display:flex; justify-content:space-between;"><span>1 yr</span><span>30 yrs</span></div>
+        <div style="margin-top:8px;">In <span id="selectedYears">10</span> years at 10% CAGR:</div>
+        <div class="compound-result" id="compoundResult">$0</div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <button class="nav-item active" data-panel="panelDashboard"><i class="fas fa-home"></i> Home</button>
+      <button class="nav-item" data-panel="panelTransactions"><i class="fas fa-exchange-alt"></i> Txs</button>
+      <button class="nav-item" data-panel="panelInsights"><i class="fas fa-lightbulb"></i> Insights</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  //  FINWISE - FULL CLIENT-SIDE LOGIC (LocalStorage)
+  // ============================================================
+
+  // ---- HELPERS ----
+  const $ = id => document.getElementById(id);
+  const STORAGE_KEY = 'finwise_data';
+
+  function getUsers() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  }
+  function saveUsers(users) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  // ---- CORE FINANCIAL HELPERS ----
+  function allocateBudget(income) {
+    return { needs: +(income * 0.5).toFixed(2), wants: +(income * 0.3).toFixed(2), savings: +(income * 0.2).toFixed(2) };
+  }
+  function calculateRoundUp(amount) {
+    return +(Math.ceil(amount) - amount).toFixed(2);
+  }
+  const SUB_KEYWORDS = ['netflix', 'spotify', 'prime', 'gym', 'hulu', 'disney', 'apple', 'youtube'];
+  function detectSubscriptions(desc) {
+    const d = desc.toLowerCase();
+    for (let k of SUB_KEYWORDS) if (d.includes(k)) return true;
+    return false;
+  }
+  function calcFutureValue(principal, years, rate = 0.10) {
+    return Math.round(principal * Math.pow(1 + rate, years));
+  }
+
+  // ---- CURRENT SESSION ----
+  let currentUser = null;
+
+  // ---- RENDER FUNCTIONS ----
+  function renderDashboard() {
+    if (!currentUser) return;
+    const u = currentUser;
+    const total = u.balance || 0;
+    const needs = u.buckets?.needs || 0;
+    const wants = u.buckets?.wants || 0;
+    const savings = u.buckets?.savings || 0;
+    const vault = u.vault || 0;
+    const xp = u.xp || 0;
+    const streak = u.streak || 0;
+
+    $('dashBalance').textContent = `$${total.toFixed(2)}`;
+    $('dashNeeds').textContent = `$${needs.toFixed(2)}`;
+    $('dashWants').textContent = `$${wants.toFixed(2)}`;
+    $('dashSavings').textContent = `$${savings.toFixed(2)}`;
+
+    // Buckets
+    const max = Math.max(needs + wants + savings, 1);
+    const pNeeds = Math.min((needs / max) * 100, 100);
+    const pWants = Math.min((wants / max) * 100, 100);
+    const pSavings = Math.min((savings / max) * 100, 100);
+    $('ringNeed').style.setProperty('--pct', pNeeds + '%');
+    $('ringNeed').querySelector('span').textContent = Math.round(pNeeds) + '%';
+    $('ringWant').style.setProperty('--pct', pWants + '%');
+    $('ringWant').querySelector('span').textContent = Math.round(pWants) + '%';
+    $('ringSave').style.setProperty('--pct', pSavings + '%');
+    $('ringSave').querySelector('span').textContent = Math.round(pSavings) + '%';
+    $('bNeedVal').textContent = `$${needs.toFixed(2)}`;
+    $('bWantVal').textContent = `$${wants.toFixed(2)}`;
+    $('bSaveVal').textContent = `$${savings.toFixed(2)}`;
+
+    // Vault
+    $('dashVault').textContent = `$${vault.toFixed(2)}`;
+    const vaultPct = Math.min((vault / 10) * 100, 100);
+    $('vaultProgressBar').style.width = vaultPct + '%';
+
+    // XP & Level
+    const level = Math.floor(xp / 100) + 1;
+    const xpInLevel = xp % 100;
+    $('dashLevel').textContent = `Level ${level}`;
+    $('dashXP').textContent = xp;
+    $('xpProgressBar').style.width = xpInLevel + '%';
+    $('dashStreak').textContent = streak;
+
+    // Badges
+    const badges = u.badges || [];
+    let badgeHtml = '';
+    if (badges.length === 0) badgeHtml = '<span style="color:#94a3b8; font-size:0.6rem;">No badges yet</span>';
+    else badges.forEach(b => badgeHtml += `<span class="badge-mini">🏅 ${b}</span> `);
+    $('badgeContainer').innerHTML = badgeHtml;
+
+    // Header
+    $('headerUsername').textContent = u.username || 'User';
+  }
+
+  function renderTransactions() {
+    if (!currentUser) return;
+    const txs = currentUser.transactions || [];
+    const list = $('txList');
+    if (txs.length === 0) {
+      list.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8;">No transactions yet</div>';
+      return;
+    }
+    let html = '';
+    // show latest first
+    const sorted = [...txs].reverse();
+    sorted.forEach(tx => {
+      const cls = tx.type === 'income' ? 'income' : 'expense';
+      const sign = tx.type === 'income' ? '+' : '-';
+      html += `<div class="tx-item">
+        <div class="tx-desc">${tx.desc} <small>${tx.type}</small></div>
+        <div class="tx-amount ${cls}">${sign}$${tx.amount.toFixed(2)}</div>
+      </div>`;
+    });
+    list.innerHTML = html;
+  }
+
+  function renderInsights() {
+    if (!currentUser) return;
+    const u = currentUser;
+    const txs = u.transactions || [];
+    // Subscriptions
+    const subs = u.subscriptions || [];
+    let subHtml = '';
+    if (subs.length === 0) subHtml = '<p style="color:#94a3b8; font-size:0.8rem;">No subscriptions detected. 🎉</p>';
+    else {
+      subs.forEach(s => subHtml += `<span class="sub-tag"><i class="fas fa-exclamation-circle"></i> ${s}</span>`);
+    }
+    $('subList').innerHTML = subHtml;
+    const annualLeak = subs.length * 15 * 12; // assume avg $15/mo
+    $('annualLeak').textContent = `$${annualLeak}`;
+
+    // Compound
+    const savings = u.buckets?.savings || 0;
+    $('compoundBase').textContent = `$${savings.toFixed(2)}`;
+    const years = parseInt($('yearSlider').value);
+    $('selectedYears').textContent = years;
+    const future = calcFutureValue(savings, years);
+    $('compoundResult').textContent = `$${future.toFixed(2)}`;
+  }
+
+  function renderAll() {
+    renderDashboard();
+    renderTransactions();
+    renderInsights();
+  }
+
+  // ---- SAVE CURRENT USER ----
+  function saveCurrentUser() {
+    if (!currentUser) return;
+    const users = getUsers();
+    users[currentUser.username] = currentUser;
+    saveUsers(users);
+    renderAll();
+  }
+
+  // ---- ADD TRANSACTION ----
+  function addTransaction(amount, desc, type) {
+    if (!currentUser) return;
+    const u = currentUser;
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) return alert('Enter valid amount');
+
+    // Ensure buckets exist
+    if (!u.buckets) u.buckets = { needs: 0, wants: 0, savings: 0 };
+    if (!u.transactions) u.transactions = [];
+    if (!u.subscriptions) u.subscriptions = [];
+    if (u.vault === undefined) u.vault = 0;
+    if (u.xp === undefined) u.xp = 0;
+    if (u.streak === undefined) u.streak = 0;
+    if (u.badges === undefined) u.badges = [];
+    if (u.balance === undefined) u.balance = 0;
+
+    const tx = { desc, amount: amt, type, date: new Date().toISOString() };
+
+    if (type === 'income') {
+      const alloc = allocateBudget(amt);
+      u.buckets.needs += alloc.needs;
+      u.buckets.wants += alloc.wants;
+      u.buckets.savings += alloc.savings;
+      u.balance += amt;
+      u.xp += 15; // XP for income
+    } else {
+      // Expense
+      const spare = calculateRoundUp(amt);
+      u.vault += spare;
+      // Deduct from Wants bucket primarily
+      u.buckets.wants = Math.max(0, u.buckets.wants - amt);
+      u.balance = Math.max(0, u.balance - amt);
+      u.xp += 10; // XP for expense (tracking)
+
+      // Subscription detection
+      if (detectSubscriptions(desc)) {
+        const found = SUB_KEYWORDS.find(k => desc.toLowerCase().includes(k));
+        if (found && !u.subscriptions.includes(found)) {
+          u.subscriptions.push(found);
+          u.xp += 20; // bonus for finding a sub!
+        }
+      }
+    }
+
+    u.transactions.push(tx);
+
+    // Check for Vault Lock achievement
+    if (u.vault >= 10) {
+      // We'll handle lock manually via button, but auto-prompt could be here.
+      // Just show a toast later.
+    }
+
+    // Check badges
+    if (u.transactions.length >= 5 && !u.badges.includes('Saver Novice')) u.badges.push('Saver Novice');
+    if (u.subscriptions.length >= 1 && !u.badges.includes('Subscription Slayer')) u.badges.push('Subscription Slayer');
+    if (u.buckets.savings >= 100 && !u.badges.includes('Investor in the Making')) u.badges.push('Investor in the Making');
+
+    // Streak (simplified)
+    u.streak += 1;
+
+    saveCurrentUser();
+    renderAll();
+    // Switch to dashboard to see updates
+    switchPanel('panelDashboard');
+  }
+
+  // ---- LOCK VAULT ----
+  function lockVault() {
+    if (!currentUser) return;
+    const u = currentUser;
+    if (u.vault < 10) {
+      alert('Need at least $10 in vault to lock!');
+      return;
+    }
+    const amount = u.vault;
+    u.buckets.savings += amount;
+    u.vault = 0;
+    u.xp += 50;
+    // Show confetti
+    const box = $('confettiBox');
+    $('confettiAmount').textContent = amount.toFixed(2);
+    box.style.display = 'block';
+    setTimeout(() => { box.style.display = 'none'; }, 2500);
+    saveCurrentUser();
+    renderAll();
+  }
+
+  // ---- PANEL SWITCH ----
+  function switchPanel(id) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    $(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.nav-item[data-panel="${id}"]`)?.classList.add('active');
+    if (id === 'panelInsights') renderInsights();
+    if (id === 'panelTransactions') renderTransactions();
+  }
+
+  // ---- AUTH ----
+  function authLogin(username, password) {
+    const users = getUsers();
+    if (users[username] && users[username].password === password) {
+      currentUser = users[username];
+      $('authSection').classList.add('hidden');
+      $('mainApp').classList.add('active');
+      renderAll();
+      return true;
+    }
+    return false;
+  }
+
+  function authRegister(username, password) {
+    const users = getUsers();
+    if (users[username]) return false;
+    const newUser = {
+      username,
+      password,
+      balance: 0,
+      buckets: { needs: 0, wants: 0, savings: 0 },
+      vault: 0,
+      xp: 0,
+      streak: 0,
+      badges: [],
+      subscriptions: [],
+      transactions: []
+    };
+    users[username] = newUser;
+    saveUsers(users);
+    return authLogin(username, password);
+  }
+
+  // ---- INIT EVENT LISTENERS ----
+  document.addEventListener('DOMContentLoaded', function() {
+    // Auth toggle
+    let isLogin = true;
+    const authBtn = $('authMainBtn');
+    const authToggle = $('authToggle');
+    const authError = $('authError');
+
+    authToggle.addEventListener('click', function() {
+      isLogin = !isLogin;
+      authBtn.textContent = isLogin ? 'Login' : 'Register';
+      authToggle.innerHTML = isLogin ? "Don't have an account? <span>Register</span>" : "Already have an account? <span>Login</span>";
+      authError.textContent = '';
+    });
+
+    authBtn.addEventListener('click', function() {
+      const user = $('authUsername').value.trim();
+      const pass = $('authPassword').value.trim();
+      if (!user || !pass) { authError.textContent = 'Fill all fields'; return; }
+      let success = false;
+      if (isLogin) success = authLogin(user, pass);
+      else success = authRegister(user, pass);
+      if (!success) authError.textContent = isLogin ? 'Invalid credentials' : 'Username already exists';
+      else authError.textContent = '';
+    });
+
+    // Enter key for auth
+    document.querySelectorAll('#authUsername, #authPassword').forEach(el => {
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') authBtn.click(); });
+    });
+
+    // Bottom Nav
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const panel = this.dataset.panel;
+        switchPanel(panel);
+      });
+    });
+
+    // Add Transaction
+    $('addTxBtn').addEventListener('click', function() {
+      const amount = $('txAmount').value;
+      const desc = $('txDesc').value.trim() || 'Misc';
+      const type = $('txType').value;
+      addTransaction(amount, desc, type);
+      $('txAmount').value = '';
+      $('txDesc').value = '';
+    });
+
+    // Lock Vault
+    $('lockVaultBtn').addEventListener('click', lockVault);
+
+    // Compound Slider
+    $('yearSlider').addEventListener('input', function() {
+      if (currentUser) renderInsights();
+    });
+
+    // Auto-login demo if exists
+    const users = getUsers();
+    if (users['demo']) {
+      // just show login screen, user can click login
+    }
+  });
+</script>
+</body>
+</html>
